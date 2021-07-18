@@ -10,6 +10,8 @@
 #define MAXQUEUE 10
 #define EPOLL_SIZE 5
 
+/**************In reactor.h***************
+
 // 客户的请求
 struct logRequest {
     char name[20];    
@@ -22,7 +24,7 @@ struct logResponse {
     char msg[512];    // 回应消息
 };
 
-/*  写在reactor.h中  存储用户信息 由两个从反应堆维护
+ 写在reactor.h中  存储用户信息 由两个从反应堆维护
 struct User {
     int fd;
     char name[20];
@@ -30,7 +32,31 @@ struct User {
     int online;
     int epollfd;   // 用户存在的反应堆
 };
-*/
+******************************************/
+
+void *subreactor(void *arg) {
+    int epollfd = *(int *)arg;
+    struct epoll_event ev, events[5];
+    while (1) {
+        int nfds = epoll_wait(epollfd, events, 5, -1);
+        if (nfds < 0) {
+            perror("epoll_wait");
+            exit(1);
+        }
+        for (int i = 0; i < nfds; i++) {
+            char buff[512] = {0};
+            struct User *user;
+            user = (struct User *)events[i].data.ptr;
+            int nrecv = recv(user->fd, buff, sizeof(buff), 0);
+            if (nrecv < 0) {
+                epoll_ctl(epollfd, EPOLL_CTL_DEL, user->fd, NULL);
+                close(user->fd);
+                user->online = 0;
+            }
+            printf("<sub_%d_%s> : %s\n", epollfd, user->name, buff);
+        }
+    }
+}
 
 int main(int argc, char **argv) {
     int opt, listener, epollfd, epollfd_boy, epollfd_girl, port;   // 主：epollfd  从：boy&girl
@@ -67,12 +93,19 @@ int main(int argc, char **argv) {
     
     // 任务队列，独立维护
     struct task_queue boyQueue;
-    struct tasl_queue girlQueue;
+    struct task_queue girlQueue;
     
     // 初始化任务队列
     task_queue_init(&boyQueue, MAXQUEUE);
     task_queue_init(&girlQueue, MAXQUEUE);
+
+    pthread_t tid_boy, tid_girl;
     
+    pthread_create(&tid_boy, NULL, subreactor, &epollfd_boy);
+    pthread_create(&tid_girl, NULL, subreactor, &epollfd_girl);
+   
+    printf("<%d> : boy\n<%d> : girl\n", epollfd_boy, epollfd_girl);
+
     // 创建主反应堆 等待用户接入——将listener加入到反应堆
     struct epoll_event ev, events[EPOLL_SIZE]; 
    
@@ -109,6 +142,7 @@ int main(int argc, char **argv) {
                 // 此处有BUG：程序走到这里若用户没有输入，则会一直阻塞
                 recv(new_fd, (char *)&request, sizeof(request), 0);     // 先收用户名字和性别
                 
+                // 这里应该由从反应堆去做
                 struct User *tmp;
                 // 判断性别
                 if (request.sex) {
@@ -127,6 +161,7 @@ int main(int argc, char **argv) {
                 // 填充，保留用户信息
                 response.flag = 1;                                          // 用户正确连接
                 strcpy(response.msg, "OK!");                                // 给用户发一个ok
+                printf("Msg from %s\n", tmp[new_fd].name);                  // 打印用户名
                 send(new_fd, (char *)&response, sizeof(response), 0);       // 发送给用户
                 // 假设验证完之后，把用户添加到从反应堆
                 add_to_subreactor(&tmp[new_fd]);
