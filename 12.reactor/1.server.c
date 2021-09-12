@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "head.h"
-#define MAX 100
+#define MAX 100         // 最大用户数量
 #define MAXQUEUE 10
 #define EPOLL_SIZE 5
 
@@ -34,6 +34,7 @@ struct User {
 };
 ******************************************/
 
+// 合伙人处理函数
 void *subreactor(void *arg) {
     int epollfd = *(int *)arg;
     struct epoll_event ev, events[5];
@@ -49,9 +50,10 @@ void *subreactor(void *arg) {
             user = (struct User *)events[i].data.ptr;
             int nrecv = recv(user->fd, buff, sizeof(buff), 0);
             if (nrecv < 0) {
+                // 客户离线
                 epoll_ctl(epollfd, EPOLL_CTL_DEL, user->fd, NULL);
                 close(user->fd);
-                user->online = 0;
+                user->online = 0;               
             }
             printf("<sub_%d_%s> : %s\n", epollfd, user->name, buff);
         }
@@ -77,7 +79,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    // 创建epoll实例
+    // 创建epoll实例 反应堆
     epollfd = epoll_create(1);
     epollfd_boy = epoll_create(1);
     epollfd_girl = epoll_create(1);
@@ -99,6 +101,7 @@ int main(int argc, char **argv) {
     task_queue_init(&boyQueue, MAXQUEUE);
     task_queue_init(&girlQueue, MAXQUEUE);
 
+    // 工作线程
     pthread_t tid_boy, tid_girl;
     
     pthread_create(&tid_boy, NULL, subreactor, &epollfd_boy);
@@ -110,7 +113,7 @@ int main(int argc, char **argv) {
     struct epoll_event ev, events[EPOLL_SIZE]; 
    
     // 注册epoll实例
-    ev.events = EPOLLIN;
+    ev.events = EPOLLIN;     // 接收连接
     ev.data.fd = listener;
     
     // 将listener加入到主反应堆中
@@ -143,6 +146,7 @@ int main(int argc, char **argv) {
                 recv(new_fd, (char *)&request, sizeof(request), 0);     // 先收用户名字和性别
                 
                 // 这里应该由从反应堆去做
+                // 对用户的操作需要考虑安全性
                 struct User *tmp;
                 // 判断性别
                 if (request.sex) {
@@ -155,7 +159,7 @@ int main(int argc, char **argv) {
                 strcpy(tmp[new_fd].name, request.name);                     // 拷贝用户名字
                 strcpy(tmp[new_fd].ip, inet_ntoa(client.sin_addr));         // 拷贝用户ip
                 tmp[new_fd].online = 1;                                     // 1 已上线
-                tmp[new_fd].fd = new_fd;                                    // 
+                tmp[new_fd].fd = new_fd;                                 
                 
                 // 省略的操作：验证用户信息，验证会员状态等等操作
                 // 填充，保留用户信息
@@ -168,8 +172,5 @@ int main(int argc, char **argv) {
             }
         }
     }
-
-
-
     return 0;
 }

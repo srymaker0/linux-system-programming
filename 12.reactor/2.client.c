@@ -23,14 +23,16 @@ int main(int argc, char **argv) {
     bzero(&request, sizeof(request));
     bzero(&response, sizeof(response));
 
-    request.sex = atoi(argv[3]);
-    strcpy(request.name, argv[4]);
-
-    send(sockfd, (void *)&request, sizeof(request), 0);
-    recv(sockfd, (void *)&response, sizeof(response), 0);
+    request.sex = atoi(argv[3]);                            // 用户性别
+    strcpy(request.name, argv[4]);                          // 用户姓名
+    
+    // 先发送用户的信息
+    send(sockfd, (void *)&request, sizeof(request), 0);     // 向服务端发送数据     
+    recv(sockfd, (void *)&response, sizeof(response), 0);   // 接收响应
     
     printf("Recv : %s\n", response.msg);     // 打印从服务端收到的信息
 
+    // 发送一些数据
     while(1) {
         char buff[512] = {0};
         scanf("%[^\n]s", buff);
