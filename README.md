@@ -1,9 +1,6 @@
 # linux-system-programming
-C&amp;Linux
 
-这里记录了个人学习linux系统编程的代码和一些小的功能。
-
-[common](./common)目录是一个通用目录，各部分代码需要用到的文件都在此目录中，以下是说明:point_down:
+这里记录了个人学习linux系统编程的代码和一些小的功能。[common](./common)目录是一个通用目录，各部分代码需要用到的文件都在此目录中，以下是说明:point_down:
 
 在`common`目录下
 
