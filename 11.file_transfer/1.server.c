@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Usage : %s port!\n", argv[0]);
     }
     port = atoi(argv[1]);
-    if ((server_listen = socket_create(port) < 0)) {
+    if ((server_listen = socket_create(port)) < 0) {
         perror("server_listen");
         exit(1);
     }
