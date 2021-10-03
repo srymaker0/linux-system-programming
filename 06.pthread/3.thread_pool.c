@@ -40,7 +40,7 @@ void task_queue_push(struct task_queue *taskQueue, char *str) {
 char *task_queue_pop(struct task_queue *taskQueue) {
     pthread_mutex_lock(&taskQueue->mutex);
     // 若任务队列为空，则等待任务到来
-    if (taskQueue->total == 0) {
+    while (taskQueue->total == 0) {
         printf("taskQueue is empty!\n");
         pthread_cond_wait(&taskQueue->cond, &taskQueue->mutex);
     }
