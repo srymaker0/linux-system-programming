@@ -35,11 +35,15 @@ int recv_file(int sockfd, const char *datadir) {
         }
     }
     while (1) {
+        // 若packet_pre中有数据，需要先拷贝至packet中
+        if (offset) {
+            memcpy((char *)&packet, &packet_pre, offset);
+        }
         while ((recv_size = recv(sockfd, (void *)&packet_t, packet_size, 0)) > 0) {
             // 存在两种情况 1、数据大小刚好等于packet_size 2、粘包之后的offset和recv_size刚好等于packet_size
             if (offset + recv_size == packet_size) {                    
                 printf("整包!\n");
-                // 拷贝至packet  +offset，对应情况2，考虑到packet中已经有数据(偏移量为offset)
+                // 拷贝至packet  ｜+offset，对应情况2，考虑到packet中已经有数据(偏移量为offset)
                 memcpy((char *)&packet + offset, &packet_t, recv_size);         // 需要强转才可做加运算    
                 offset = 0;
                 break;          // 退出循环，递交
