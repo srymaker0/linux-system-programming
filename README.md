@@ -45,9 +45,10 @@
 [10.文件传输](./10.socket_file)
 
 [11.粘包问题](./11.file_transfer)
-C/S文件传输的实现
 
-[个人博客](https://srymaker0.com/)中有更详细的说明
+-    C/S文件传输的实现
+
+-    [个人博客](https://srymaker0.com/)中有更详细的说明
 
 ![](https://cdn.jsdelivr.net/gh/srymaker0/blogImgs@main/Img/20211004164450.png)
 
