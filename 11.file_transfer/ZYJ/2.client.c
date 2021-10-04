@@ -17,9 +17,8 @@ int send_file(int sockfd, const char *file) {
     char *p;
     struct Packet packet;
     memset(&packet, 0, sizeof(packet));
-    // strcpy(packet.filename, file); linux上可以这样写
-    // 在本地中环境中，路径名不一样，只取文件名
-    strcpy(packet.filename, (p = strrchr(file, '/')) ? p + 1 : file);       
+    //strcpy(packet.filename, file); linux上
+    strcpy(packet.filename, (p = strrchr(file, '/')) ? p + 1 : file);       // 本地mac下
     if ((fp = fopen(file, "r")) == NULL) {
         perror("fopen");
         return -1;
